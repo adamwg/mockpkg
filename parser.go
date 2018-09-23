@@ -150,7 +150,7 @@ func (n *NodeVisitor) DeclaredFuncs() []string {
 func (nv *NodeVisitor) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
 	case *ast.FuncDecl:
-		if ast.IsExported(n.Name.Name) {
+		if ast.IsExported(n.Name.Name) && n.Recv == nil {
 			nv.declaredFuncs = append(nv.declaredFuncs, n.Name.Name)
 		}
 	}
