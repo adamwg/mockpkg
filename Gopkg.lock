@@ -5,12 +5,17 @@
   branch = "master"
   name = "github.com/vektra/mockery"
   packages = ["mockery"]
-  revision = "5af2e9db6278068534c6ee4735ed34962f6ae588"
+  revision = "ea265755d541b124de6bc248f7744eab9005fd33"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/tools"
-  packages = ["go/ast/astutil","go/buildutil","go/loader","imports"]
+  packages = [
+    "go/ast/astutil",
+    "go/buildutil",
+    "go/loader",
+    "imports"
+  ]
   revision = "2ae76fd1560b622911f444c1e66b70a857e1de67"
 
 [solve-meta]
