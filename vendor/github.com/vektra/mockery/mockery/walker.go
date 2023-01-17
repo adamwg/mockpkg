@@ -23,8 +23,7 @@ type WalkerVisitor interface {
 }
 
 func (this *Walker) Walk(visitor WalkerVisitor) (generated bool) {
-	parser := NewParser()
-	parser.AddBuildTags(this.BuildTags...)
+	parser := NewParser(this.BuildTags)
 	this.doWalk(parser, this.BaseDir, visitor)
 
 	err := parser.Load()
@@ -94,6 +93,7 @@ type GeneratorVisitor struct {
 	Osp       OutputStreamProvider
 	// The name of the output package, if InPackage is false (defaults to "mocks")
 	PackageName string
+	StructName  string
 }
 
 func (this *GeneratorVisitor) VisitWalk(iface *Interface) error {
@@ -108,19 +108,19 @@ func (this *GeneratorVisitor) VisitWalk(iface *Interface) error {
 	var pkg string
 
 	if this.InPackage {
-		pkg = iface.Path
+		pkg = filepath.Dir(iface.FileName)
 	} else {
 		pkg = this.PackageName
 	}
 
-	out, err, closer := this.Osp.GetWriter(iface, pkg)
+	out, err, closer := this.Osp.GetWriter(iface)
 	if err != nil {
 		fmt.Printf("Unable to get writer for %s: %s", iface.Name, err)
 		os.Exit(1)
 	}
 	defer closer()
 
-	gen := NewGenerator(iface, pkg, this.InPackage)
+	gen := NewGenerator(iface, pkg, this.InPackage, this.StructName)
 	gen.GeneratePrologueNote(this.Note)
 	gen.GeneratePrologue(pkg)
 

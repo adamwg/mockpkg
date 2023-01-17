@@ -12,13 +12,13 @@ import (
 type Cleanup func() error
 
 type OutputStreamProvider interface {
-	GetWriter(iface *Interface, pkg string) (io.Writer, error, Cleanup)
+	GetWriter(iface *Interface) (io.Writer, error, Cleanup)
 }
 
 type StdoutStreamProvider struct {
 }
 
-func (this *StdoutStreamProvider) GetWriter(iface *Interface, pkg string) (io.Writer, error, Cleanup) {
+func (this *StdoutStreamProvider) GetWriter(iface *Interface) (io.Writer, error, Cleanup) {
 	return os.Stdout, nil, func() error { return nil }
 }
 
@@ -29,9 +29,10 @@ type FileOutputStreamProvider struct {
 	Case                      string
 	KeepTree                  bool
 	KeepTreeOriginalDirectory string
+	FileName                  string
 }
 
-func (this *FileOutputStreamProvider) GetWriter(iface *Interface, pkg string) (io.Writer, error, Cleanup) {
+func (this *FileOutputStreamProvider) GetWriter(iface *Interface) (io.Writer, error, Cleanup) {
 	var path string
 
 	caseName := iface.Name
@@ -45,16 +46,19 @@ func (this *FileOutputStreamProvider) GetWriter(iface *Interface, pkg string) (i
 			return nil, err, func() error { return nil }
 		}
 		relativePath := strings.TrimPrefix(
-			filepath.Join(filepath.Dir(iface.Path), this.filename(caseName)),
+			filepath.Join(filepath.Dir(iface.FileName), this.filename(caseName)),
 			absOriginalDir)
 		path = filepath.Join(this.BaseDir, relativePath)
-		os.MkdirAll(filepath.Dir(path), 0755)
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			return nil, err, func() error { return nil }
+		}
 	} else if this.InPackage {
-		path = filepath.Join(filepath.Dir(iface.Path), this.filename(caseName))
+		path = filepath.Join(filepath.Dir(iface.FileName), this.filename(caseName))
 	} else {
 		path = filepath.Join(this.BaseDir, this.filename(caseName))
-		os.MkdirAll(filepath.Dir(path), 0755)
-		pkg = filepath.Base(filepath.Dir(path))
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			return nil, err, func() error { return nil }
+		}
 	}
 
 	f, err := os.Create(path)
@@ -69,7 +73,9 @@ func (this *FileOutputStreamProvider) GetWriter(iface *Interface, pkg string) (i
 }
 
 func (this *FileOutputStreamProvider) filename(name string) string {
-	if this.InPackage && this.TestOnly {
+	if this.FileName != "" {
+		return this.FileName
+	} else if this.InPackage && this.TestOnly {
 		return "mock_" + name + "_test.go"
 	} else if this.InPackage {
 		return "mock_" + name + ".go"
