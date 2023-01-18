@@ -7,8 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/adamwg/mockpkg"
 	"github.com/vektra/mockery/mockery"
+
+	"github.com/adamwg/mockpkg"
 )
 
 var usageFmt = `%s - Generate mocks for all or some of a package's exported functions.
@@ -68,7 +69,7 @@ func main() {
 	}
 
 	pkg := iface.Pkg.Path()
-	gen := mockery.NewGenerator(iface, pkg, false)
+	gen := mockery.NewGenerator(iface, pkg, false, "")
 	gen.GeneratePrologueNote("")
 	gen.GeneratePrologue("mocks")
 	if err := gen.Generate(); err != nil {
